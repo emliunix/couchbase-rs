@@ -106,7 +106,12 @@ fn run_lcb_loop(
     let pass_bytes = password.map(|p| p.into_bytes());
 
     match LcbInstance::new(connection_string.into_bytes(), user_bytes, pass_bytes) {
-        Ok(i) => instances.set_unbound(i),
+        Ok(i) => {
+            match bucket_name_for_instance(i.inner) {
+                Some(name) => instances.set_bound(name, i),
+                None => instances.set_unbound(i),
+            }
+        },
         Err(e) => warn!("Could not open libcouchbase instance {}", e),
     };
 
